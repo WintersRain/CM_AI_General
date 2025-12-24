@@ -7,8 +7,9 @@ class GameWindow:
     """Screen region where the game runs (windowed mode recommended)."""
     left: int = 0
     top: int = 0
-    width: int = 1280
-    height: int = 720
+    width: int = 1920
+    height: int = 1080
+
 
 @dataclass
 class GridConfig:
