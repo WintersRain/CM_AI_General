@@ -1,12 +1,16 @@
-"""High-performance screen capture via DirectX."""
+"""Cross-platform screen capture using mss.
+
+Works on Windows, Linux, and macOS.
+Replaces dxcam (Windows-only) for Linux compatibility.
+"""
 import numpy as np
 
 try:
-    import dxcam
-    DXCAM_AVAILABLE = True
+    import mss
+    MSS_AVAILABLE = True
 except ImportError:
-    DXCAM_AVAILABLE = False
-    print("Warning: dxcam not installed. Run: pip install dxcam")
+    MSS_AVAILABLE = False
+    print("Warning: mss not installed. Run: pip install mss")
 
 try:
     import cv2
@@ -16,24 +20,33 @@ except ImportError:
     print("Warning: opencv-python not installed. Run: pip install opencv-python")
 
 import sys
-sys.path.insert(0, str(__file__).rsplit('\\', 2)[0])
+import os
+
+# Handle path for both Windows and Linux
+script_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(script_dir)
+sys.path.insert(0, parent_dir)
+
 from config import CONFIG
 
 
 class ScreenCapture:
-    """GPU-accelerated screen capture using dxcam."""
+    """Cross-platform screen capture using mss.
+    
+    Works on Linux (X11/Wayland), Windows, and macOS.
+    """
     
     def __init__(self):
-        if not DXCAM_AVAILABLE:
-            raise RuntimeError("dxcam is required. Install with: pip install dxcam")
+        if not MSS_AVAILABLE:
+            raise RuntimeError("mss is required. Install with: pip install mss")
         
-        self.camera = dxcam.create(output_color="BGR")
-        self._region = (
-            CONFIG.window.left,
-            CONFIG.window.top,
-            CONFIG.window.left + CONFIG.window.width,
-            CONFIG.window.top + CONFIG.window.height,
-        )
+        self.sct = mss.mss()
+        self._region = {
+            "left": CONFIG.window.left,
+            "top": CONFIG.window.top,
+            "width": CONFIG.window.width,
+            "height": CONFIG.window.height,
+        }
     
     def grab(self) -> np.ndarray:
         """
@@ -42,11 +55,14 @@ class ScreenCapture:
         Returns:
             np.ndarray: HxWxC BGR array, or None if capture failed.
         """
-        frame = self.camera.grab(region=self._region)
-        if frame is None:
-            # Retry once
-            frame = self.camera.grab(region=self._region)
-        return frame
+        try:
+            screenshot = self.sct.grab(self._region)
+            # mss returns BGRA, convert to BGR
+            frame = np.array(screenshot)[:, :, :3]
+            return frame
+        except Exception as e:
+            print(f"Screen capture failed: {e}")
+            return None
     
     def grab_grayscale(self) -> np.ndarray:
         """
@@ -87,7 +103,7 @@ class ScreenCapture:
 
 if __name__ == "__main__":
     # Quick test
-    if DXCAM_AVAILABLE:
+    if MSS_AVAILABLE:
         cap = ScreenCapture()
         frame = cap.grab()
         if frame is not None:
@@ -95,4 +111,4 @@ if __name__ == "__main__":
         else:
             print("Failed to capture frame")
     else:
-        print("Install dxcam first: pip install dxcam")
+        print("Install mss first: pip install mss")

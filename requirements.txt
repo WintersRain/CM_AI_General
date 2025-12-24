@@ -1,23 +1,21 @@
-# Combat Mission AI - Core Dependencies
+# Combat Mission AI - Cross-Platform Dependencies
+# Works on Linux (for Proton/Steam) and Windows
 
-# Screen capture (Windows-only, GPU-accelerated via DirectX)
-dxcam
+# Core ML/RL
+gymnasium>=0.29.0
+numpy>=1.24.0
+opencv-python>=4.8.0
+pillow>=10.0.0
 
-# Hardware-level input injection (bypasses DirectX input guards)
-pydirectinput
+# Screen capture (cross-platform)
+mss>=9.0.0
 
-# RL environment framework
-gymnasium
+# Input injection (cross-platform, X11 on Linux)
+pynput>=1.7.6
 
-# OCR for reading in-game text (requires Tesseract binary)
-pytesseract
+# OCR
+pytesseract>=0.3.10
 
-# Image processing
-opencv-python
-
-# Keyboard/mouse listener for recording gameplay
-pynput
-
-# ML frameworks
-torch
-stable-baselines3
+# Recording/training utilities
+# torch>=2.0.0  # Uncomment when ready for training
+# stable-baselines3>=2.0.0  # Uncomment when ready for RL

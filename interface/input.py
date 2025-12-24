@@ -1,30 +1,43 @@
-"""Input injection using DirectInput scan codes."""
+"""Cross-platform input injection using pynput.
+
+Works on Windows, Linux, and macOS.
+Replaces pydirectinput (Windows-only) for Linux compatibility.
+"""
 import time
 
 try:
-    import pydirectinput
-    pydirectinput.FAILSAFE = False  # Disable corner abort
-    PYDIRECTINPUT_AVAILABLE = True
+    from pynput.mouse import Button, Controller as MouseController
+    from pynput.keyboard import Key, Controller as KeyboardController
+    PYNPUT_AVAILABLE = True
 except ImportError:
-    PYDIRECTINPUT_AVAILABLE = False
-    print("Warning: pydirectinput not installed. Run: pip install pydirectinput")
+    PYNPUT_AVAILABLE = False
+    print("Warning: pynput not installed. Run: pip install pynput")
 
 import sys
-sys.path.insert(0, str(__file__).rsplit('\\', 2)[0])
+import os
+
+# Handle path for both Windows and Linux
+script_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(script_dir)
+sys.path.insert(0, parent_dir)
+
 from config import CONFIG
 
 
 class InputController:
     """
-    Hardware-level mouse/keyboard control for Combat Mission.
+    Cross-platform mouse/keyboard control for Combat Mission.
     
-    Uses pydirectinput to send DirectInput scan codes,
-    which work with DirectX games that ignore virtual keys.
+    Uses pynput which works on Linux (X11), Windows, and macOS.
+    Note: On Linux, this requires X11 (not Wayland) or root for /dev/uinput.
     """
     
     def __init__(self):
-        if not PYDIRECTINPUT_AVAILABLE:
-            raise RuntimeError("pydirectinput is required. Install with: pip install pydirectinput")
+        if not PYNPUT_AVAILABLE:
+            raise RuntimeError("pynput is required. Install with: pip install pynput")
+        
+        self.mouse = MouseController()
+        self.keyboard = KeyboardController()
         
         self.grid = CONFIG.grid
         self.window = CONFIG.window
@@ -62,21 +75,53 @@ class InputController:
         row = cell_id // self.grid.cols
         col = cell_id % self.grid.cols
         x, y = self.grid_to_screen(row, col)
-        pydirectinput.click(x, y, button=button)
+        self.click_screen(x, y, button)
     
     def click_screen(self, x: int, y: int, button: str = "left"):
         """Click at absolute screen coordinates."""
-        pydirectinput.click(x, y, button=button)
+        self.mouse.position = (x, y)
+        time.sleep(0.01)  # Small delay for position to register
+        btn = Button.left if button == "left" else Button.right
+        self.mouse.click(btn)
     
     def press_key(self, key: str):
         """Press and release a keyboard key."""
-        pydirectinput.press(key)
+        # Handle special keys
+        special_keys = {
+            'tab': Key.tab,
+            'enter': Key.enter,
+            'return': Key.enter,
+            'space': Key.space,
+            'escape': Key.esc,
+            'esc': Key.esc,
+            'shift': Key.shift,
+            'ctrl': Key.ctrl,
+            'alt': Key.alt,
+        }
+        
+        if key.lower() in special_keys:
+            self.keyboard.press(special_keys[key.lower()])
+            self.keyboard.release(special_keys[key.lower()])
+        else:
+            self.keyboard.press(key)
+            self.keyboard.release(key)
     
     def hold_key(self, key: str, duration: float = 0.1):
         """Hold a key for a duration."""
-        pydirectinput.keyDown(key)
+        special_keys = {
+            'tab': Key.tab,
+            'enter': Key.enter,
+            'space': Key.space,
+            'escape': Key.esc,
+            'shift': Key.shift,
+            'ctrl': Key.ctrl,
+            'alt': Key.alt,
+        }
+        
+        k = special_keys.get(key.lower(), key)
+        self.keyboard.press(k)
         time.sleep(duration)
-        pydirectinput.keyUp(key)
+        self.keyboard.release(k)
     
     # Combat Mission specific actions
     def end_turn(self):
@@ -105,12 +150,12 @@ class InputController:
 
 
 if __name__ == "__main__":
-    # Quick test: type a letter in an open text editor
-    if PYDIRECTINPUT_AVAILABLE:
-        print("Test: Will type 'a' in 3 seconds. Open Notepad or similar...")
+    # Quick test
+    if PYNPUT_AVAILABLE:
+        print("Test: Will type 'a' in 3 seconds. Open a text editor...")
         time.sleep(3)
         controller = InputController()
         controller.press_key('a')
         print("Done. Did 'a' appear?")
     else:
-        print("Install pydirectinput first: pip install pydirectinput")
+        print("Install pynput first: pip install pynput")
