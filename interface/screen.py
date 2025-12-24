@@ -6,6 +6,7 @@ import numpy as np
 import subprocess
 import tempfile
 import os
+import time
 
 try:
     from PIL import Image
@@ -82,13 +83,35 @@ class ScreenCapture:
     
     def _grab_scrot(self) -> np.ndarray:
         """Capture using scrot."""
+        tmp_path = f"/tmp/cm_capture_{os.getpid()}.png"
+        
         try:
-            # Create temp file for screenshot
-            with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:
-                tmp_path = f.name
+            # Remove old file if exists
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
             
-            # Capture screen with scrot
-            subprocess.run(['scrot', tmp_path], check=True, capture_output=True)
+            # Capture screen with scrot - use overwrite flag
+            result = subprocess.run(
+                ['scrot', '-o', tmp_path],  # -o = overwrite
+                capture_output=True,
+                timeout=5
+            )
+            
+            if result.returncode != 0:
+                print(f"scrot error: {result.stderr.decode()}")
+                return None
+            
+            # Wait for file to be written
+            time.sleep(0.05)
+            
+            # Verify file exists and has content
+            if not os.path.exists(tmp_path):
+                print("scrot: output file not created")
+                return None
+            
+            if os.path.getsize(tmp_path) == 0:
+                print("scrot: output file is empty")
+                return None
             
             # Load and crop to region
             img = Image.open(tmp_path)
@@ -99,23 +122,37 @@ class ScreenCapture:
             right = left + self._region["width"]
             bottom = top + self._region["height"]
             
-            img = img.crop((left, top, right, bottom))
+            # Ensure crop bounds are within image
+            img_width, img_height = img.size
+            right = min(right, img_width)
+            bottom = min(bottom, img_height)
+            
+            if right > left and bottom > top:
+                img = img.crop((left, top, right, bottom))
             
             # Convert to numpy BGR
             frame = np.array(img)
             if len(frame.shape) == 3 and frame.shape[2] == 4:  # RGBA
                 frame = frame[:, :, :3]  # Drop alpha
             if len(frame.shape) == 3 and frame.shape[2] == 3:
-                frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-            
-            # Cleanup
-            os.unlink(tmp_path)
+                if CV2_AVAILABLE:
+                    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             
             return frame
             
+        except subprocess.TimeoutExpired:
+            print("scrot: timeout")
+            return None
         except Exception as e:
             print(f"scrot capture failed: {e}")
             return None
+        finally:
+            # Cleanup
+            if os.path.exists(tmp_path):
+                try:
+                    os.unlink(tmp_path)
+                except:
+                    pass
     
     def _grab_mss(self) -> np.ndarray:
         """Capture using mss (fallback)."""
@@ -169,5 +206,9 @@ if __name__ == "__main__":
     frame = cap.grab()
     if frame is not None:
         print(f"Captured frame shape: {frame.shape}")
+        # Save test image
+        if CV2_AVAILABLE:
+            cv2.imwrite("/tmp/capture_test.png", frame)
+            print("Saved test capture to /tmp/capture_test.png")
     else:
         print("Failed to capture frame")
