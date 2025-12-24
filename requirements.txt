@@ -1,0 +1,23 @@
+# Combat Mission AI - Core Dependencies
+
+# Screen capture (Windows-only, GPU-accelerated via DirectX)
+dxcam
+
+# Hardware-level input injection (bypasses DirectX input guards)
+pydirectinput
+
+# RL environment framework
+gymnasium
+
+# OCR for reading in-game text (requires Tesseract binary)
+pytesseract
+
+# Image processing
+opencv-python
+
+# Keyboard/mouse listener for recording gameplay
+pynput
+
+# ML frameworks
+torch
+stable-baselines3

@@ -1,0 +1,93 @@
+﻿============================================================
+COMBAT MISSION AI - ENVIRONMENT TEST
+============================================================
+
+[1/3] Testing screen capture...
+python : Traceback 
+(most recent call 
+last):
+At line:1 char:1
++ python main.py test 
+2>&1 | Out-File 
+-Encoding utf8 
+e:\CM_AI_General\t ...
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: (Traceback    
+ (most recent call    
+ last)::String) [    
+], RemoteExceptio    n
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 
+  File "E:\CM_AI_Gener
+al\main.py", line 50, 
+in test_environment
+    print(f"  \u2713 
+Screen capture 
+working: 
+{frame.shape}")
+    ~~~~~^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^
+  File "C:\Python313\L
+ib\encodings\cp1252.py
+", line 19, in encode
+    return codecs.char
+map_encode(input,self.
+errors,encoding_table)
+[0]
+           ~~~~~~~~~~~
+~~~~~~~~~~^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 
+'charmap' codec can't 
+encode character 
+'\u2713' in position 
+2: character maps to 
+<undefined>
+
+During handling of 
+the above exception, 
+another exception 
+occurred:
+
+Traceback (most 
+recent call last):
+  File "E:\CM_AI_Gener
+al\main.py", line 
+105, in <module>
+    main()
+    ~~~~^^
+  File "E:\CM_AI_Gener
+al\main.py", line 28, 
+in main
+    test_environment()
+    ~~~~~~~~~~~~~~~~^^
+  File "E:\CM_AI_Gener
+al\main.py", line 54, 
+in test_environment
+    print(f"  \u2717 
+Screen capture 
+failed: {e}")
+    ~~~~~^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\L
+ib\encodings\cp1252.py
+", line 19, in encode
+    return codecs.char
+map_encode(input,self.
+errors,encoding_table)
+[0]
+           ~~~~~~~~~~~
+~~~~~~~~~~^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 
+'charmap' codec can't 
+encode character 
+'\u2717' in position 
+2: character maps to 
+<undefined>
