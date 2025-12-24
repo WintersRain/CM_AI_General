@@ -18,12 +18,22 @@ class OCRReader:
     https://github.com/tesseract-ocr/tesseract
     """
     
-    def __init__(self, tesseract_path: str = r"C:\Program Files\Tesseract-OCR\tesseract.exe"):
+    def __init__(self, tesseract_path: str = None):
         if not PYTESSERACT_AVAILABLE:
             raise RuntimeError("pytesseract is required. Install with: pip install pytesseract")
         
+        # Auto-detect tesseract path based on OS
+        if tesseract_path is None:
+            import platform
+            if platform.system() == "Windows":
+                tesseract_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+            else:
+                # Linux/Mac - tesseract should be in PATH
+                tesseract_path = "tesseract"
+        
         pytesseract.pytesseract.tesseract_cmd = tesseract_path
         self._tesseract_path = tesseract_path
+
     
     def read_region(self, frame: np.ndarray, x: int, y: int, w: int, h: int) -> str:
         """
